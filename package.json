@@ -1,0 +1,40 @@
+{
+  "name": "gmail-customer-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP Server for Gmail integration with customer data management",
+  "main": "build/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "start": "node build/index.js",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "gmail",
+    "customer-data",
+    "bulk-email",
+    "model-context-protocol"
+  ],
+  "author": "Joseph Amoako Awuku",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.0",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.2",
+    "dotenv": "^17.2.3",
+    "google-auth-library": "^10.4.2",
+    "googleapis": "^164.1.0",
+    "install": "^0.13.0",
+    "nodemailer": "^7.0.10",
+    "open": "^10.2.0",
+    "xlsx": "^0.18.5",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "@types/nodemailer": "^7.0.4",
+    "nodemon": "^3.1.10",
+    "typescript": "^5.9.3"
+  }
+}
