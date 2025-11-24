@@ -42,11 +42,9 @@ class GmailMCPServer {
     const hasTokens = await this.auth.loadTokens();
     if (hasTokens) {
       this.gmail = new GmailService(this.auth.getClient());
-      console.log("✅ Tokens loaded. Gmail ready.");
+      // console.log("Tokens loaded. Gmail ready.");
     } else {
-      console.error(
-        "⚠️ No tokens found. Please use 'authenticate_gmail' tool."
-      );
+      // console.error(" No tokens found. Please use 'authenticate_gmail' tool.");
     }
 
     this.setupHandlers();
@@ -127,8 +125,9 @@ class GmailMCPServer {
         };
       }
 
-      if (name === "search_email") {
-        await this.gmail.searchEmails(args?.query as string);
+      if (name === "search_emails") {
+        const res = await this.gmail.searchEmails(args?.query as string);
+        console.log(`The result of searching a mail:${JSON.stringify(res)}`);
         return {
           content: [{ type: "text", text: `Search completed.` }],
         };

@@ -28,7 +28,7 @@ export const CONFIG = {
 
 // Debugging: Print to stderr to verify credentials are loaded
 if (!CONFIG.GOOGLE_CLIENT_ID) {
-  console.error("❌ CRITICAL: GOOGLE_CLIENT_ID is missing. Auth will fail.");
+  console.log("❌ CRITICAL: GOOGLE_CLIENT_ID is missing. Auth will fail.");
 } else {
   console.error("✅ Configuration loaded successfully.");
 }

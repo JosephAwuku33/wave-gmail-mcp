@@ -68,12 +68,38 @@ export class GmailService {
     });
   }
 
-  async searchEmails(query: string): Promise<any[]> {
+  async searchEmails(query: string): Promise<EmailMessage[]> {
     const res = await this.gmail.users.messages.list({
       userId: "me",
       q: query,
     });
-    return res.data.messages || [];
+
+    const messages: EmailMessage[] = [];
+    const messageList = res.data.messages;
+    if (!messageList) return [];
+
+    for (const message of messageList) {
+      if (!message.id) continue;
+
+      const detail = await this.gmail.users.messages.get({
+        userId: "me",
+        id: message.id,
+        format: "full",
+      });
+
+      const headers = detail.data.payload?.headers || [];
+      messages.push({
+        id: detail.data.id!,
+        threadId: detail.data.threadId!,
+        subject: headers.find((h: any) => h.name === "Subject")?.value || "",
+        from: headers.find((h: any) => h.name === "From")?.value || "",
+        to: headers.find((h: any) => h.name === "To")?.value || "",
+        date: headers.find((h: any) => h.name === "Date")?.value || "",
+        snippet: detail.data.snippet || "",
+      });
+    }
+
+    return messages;
   }
 
   async getLabels(): Promise<string[]> {
