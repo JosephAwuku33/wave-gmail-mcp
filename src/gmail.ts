@@ -10,7 +10,10 @@ export class GmailService {
     this.gmail = google.gmail({ version: "v1", auth: authClient });
   }
 
-  async getMessages(label: string, maxResults = 50): Promise<EmailMessage[]> {
+  async getMessages(
+    label: "INBOX" | "SENT",
+    maxResults = 50
+  ): Promise<EmailMessage[]> {
     const response = await this.gmail.users.messages.list({
       userId: "me",
       labelIds: [label],
@@ -71,5 +74,11 @@ export class GmailService {
       q: query,
     });
     return res.data.messages || [];
+  }
+
+  async getLabels(): Promise<string[]> {
+    const res = await this.gmail.users.labels.list({ userId: "me" });
+
+    return res.data.labels?.map((label) => label.name || "") || [];
   }
 }

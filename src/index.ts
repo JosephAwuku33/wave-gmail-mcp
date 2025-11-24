@@ -4,6 +4,8 @@ import {
   CallToolRequestSchema,
   ListToolsRequestSchema,
   ListPromptsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema,
   McpError,
   ErrorCode,
 } from "@modelcontextprotocol/sdk/types.js";
@@ -40,7 +42,7 @@ class GmailMCPServer {
     const hasTokens = await this.auth.loadTokens();
     if (hasTokens) {
       this.gmail = new GmailService(this.auth.getClient());
-      console.error("✅ Tokens loaded. Gmail ready.");
+      console.log("✅ Tokens loaded. Gmail ready.");
     } else {
       console.error(
         "⚠️ No tokens found. Please use 'authenticate_gmail' tool."
@@ -125,10 +127,123 @@ class GmailMCPServer {
         };
       }
 
+      if (name === "search_email") {
+        await this.gmail.searchEmails(args?.query as string);
+        return {
+          content: [{ type: "text", text: `Search completed.` }],
+        };
+      }
+
       throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
     });
 
     // Implement Resource Handlers (List/Read) similar to original...
+    // List available resources
+    this.server.setRequestHandler(ListResourcesRequestSchema, async () => {
+      if (!this.gmail) {
+        return { resources: [] };
+      }
+
+      return {
+        resources: [
+          {
+            uri: "gmail://inbox",
+            mimeType: "application/json",
+            name: "Gmail Inbox",
+            description: "Access your Gmail inbox messages",
+          },
+          {
+            uri: "gmail://sent",
+            mimeType: "application/json",
+            name: "Gmail Sent",
+            description: "Access your sent Gmail messages",
+          },
+          {
+            uri: "gmail://labels",
+            mimeType: "application/json",
+            name: "Gmail Labels",
+            description: "List all Gmail labels",
+          },
+          {
+            uri: "gmail://customer-data",
+            mimeType: "application/json",
+            name: "Customer Data",
+            description: "Uploaded customer data from CSV/XLSX files",
+          },
+        ],
+      };
+    });
+
+    // Read resource content
+    this.server.setRequestHandler(
+      ReadResourceRequestSchema,
+      async (request) => {
+        const uri = request.params.uri.toString();
+
+        if (!this.gmail && !uri.includes("customer-data")) {
+          throw new McpError(
+            ErrorCode.InvalidRequest,
+            "Gmail not authenticated. Please authenticate first."
+          );
+        }
+
+        if (uri === "gmail://inbox") {
+          const messages = await this.gmail?.getMessages("INBOX");
+          return {
+            contents: [
+              {
+                uri: request.params.uri,
+                mimeType: "application/json",
+                text: JSON.stringify(messages, null, 2),
+              },
+            ],
+          };
+        }
+
+        if (uri === "gmail://sent") {
+          const messages = await this.gmail?.getMessages("SENT");
+          return {
+            contents: [
+              {
+                uri: request.params.uri,
+                mimeType: "application/json",
+                text: JSON.stringify(messages, null, 2),
+              },
+            ],
+          };
+        }
+
+        if (uri === "gmail://labels") {
+          const labels = await this.gmail?.getLabels();
+          return {
+            contents: [
+              {
+                uri: request.params.uri,
+                mimeType: "application/json",
+                text: JSON.stringify(labels, null, 2),
+              },
+            ],
+          };
+        }
+
+        if (uri === "gmail://customer-data") {
+          return {
+            contents: [
+              {
+                uri: request.params.uri,
+                mimeType: "application/json",
+                text: JSON.stringify(this.store.getAll(), null, 2),
+              },
+            ],
+          };
+        }
+
+        throw new McpError(
+          ErrorCode.InvalidRequest,
+          `Unknown resource: ${uri}`
+        );
+      }
+    );
   }
 
   async run() {
